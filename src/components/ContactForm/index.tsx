@@ -9,8 +9,40 @@ import Block from "../Block";
 import Input from "../../common/Input";
 import TextArea from "../../common/TextArea";
 import { ContactContainer, FormGroup, Span, ButtonContainer } from "./styles";
+import emailjs from 'emailjs-com';
+import{ init } from 'emailjs-com';
+import firebase from 'firebase';
 
 const Contact = ({ title, content, id, t }: ContactProps) => {
+
+    // Remoteconfig Variables
+    const remoteConfig = firebase.remoteConfig();
+  
+  
+    const REACT_APP_UserId = remoteConfig.getValue('REACT_APP_UserId').asString();
+    const REACT_APP_TemplateId = remoteConfig.getValue('REACT_APP_TemplateId').asString();
+    const REACT_APP_ServiceId = remoteConfig.getValue('REACT_APP_ServiceId').asString();
+  
+  
+    init(REACT_APP_UserId);
+  
+  
+      const sendEmail = (e:any)  => {
+  
+      e.preventDefault();
+  
+      emailjs.sendForm(
+         REACT_APP_ServiceId ? REACT_APP_ServiceId : `${process.env.REACT_APP_ServiceId}`,
+         REACT_APP_TemplateId ? REACT_APP_TemplateId : `${process.env.REACT_APP_ServiceId}`, 
+         e.target, 
+         REACT_APP_UserId ? REACT_APP_UserId : `${process.env.REACT_APP_UserId}`)
+        .then((result) => {
+            console.log(result);
+        }, (error) => {
+            console.log(error);
+        });
+    }
+
   const { values, errors, handleChange, handleSubmit } = useForm(
     validate
   ) as any;
@@ -34,14 +66,15 @@ const Contact = ({ title, content, id, t }: ContactProps) => {
         </Col>
         <Col lg={12} md={12} sm={24} xs={24}>
           <Slide direction="right">
-            <FormGroup autoComplete="off" onSubmit={handleSubmit}>
+            <FormGroup autoComplete="off" onSubmit={sendEmail}>
               <Col span={24}>
                 <Input
                   type="text"
-                  name="name"
+                  name="from_name"
                   placeholder="Your Name"
                   value={values.name || ""}
                   onChange={handleChange}
+                  labelName="Name"
                 />
                 <ValidationType type="name" />
               </Col>
@@ -51,6 +84,7 @@ const Contact = ({ title, content, id, t }: ContactProps) => {
                   name="email"
                   placeholder="Your Email"
                   value={values.email || ""}
+                  labelName="Email"
                   onChange={handleChange}
                 />
                 <ValidationType type="email" />
@@ -60,6 +94,7 @@ const Contact = ({ title, content, id, t }: ContactProps) => {
                   placeholder="Your Message"
                   value={values.message || ""}
                   name="message"
+                  labelName="Message"
                   onChange={handleChange}
                 />
                 <ValidationType type="message" />
